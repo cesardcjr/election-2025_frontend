@@ -1,16 +1,56 @@
-.App {
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+#navbar {
+  font-size: 20px;
+  line-height: 26px;
+  box-shadow: 0 8px 6px -6px gray;
+  --webkit-box-shadow: 0 8px 6px -6px gray;
+  border-bottom: 0.5px;
+  background-color: #630d95;
+background-image: linear-gradient(160deg, #630d95 0%, #ca1619 100%);
+
+}
+
+#header_title {
+  font-family: "League Spartan", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 900;
+  font-style: normal;
+  font-size: 180%;
+  width: 70%;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   text-align: center;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50%;
+  flex-direction: column;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.register {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50%;
+  flex-direction: column;
+}
+
+.result_window {
+  border: 4px solid #7650ff;
+background: #ffffff;
+}
+
+#edit_button {
+  box-shadow: 0 8px 6px -6px gray;
+  --webkit-box-shadow: 0 8px 6px -6px gray;
+  border-bottom: 0.5px;
 }
 
 .App-header {
