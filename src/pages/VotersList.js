@@ -15,7 +15,7 @@ const VoterList = ({ searchResults }) => {
     const [saving, setSaving] = useState(false); // State to track saving process
 
     useEffect(() => {
-        // Fetch voters when the component mounts or searchResults change
+
         if (searchResults && searchResults.length > 0) {
             setVoters(searchResults);
             setLoading(false);
@@ -83,25 +83,53 @@ const VoterList = ({ searchResults }) => {
     // Handle input change in the modal form
     const handleInputChange = (e) => {
         const { name, value } = e.target;
+
+        // Validate MM-DD-YYYY format
+        if (name === 'birthday') {
+            const isValidDate = /^\d{2}-\d{2}-\d{4}$/.test(value);
+            if (!isValidDate) {
+                console.log("Invalid date format, please use MM-DD-YYYY");
+
+            } else {
+                console.log("Valid date");
+            }
+        }
         setVoterData((prevData) => ({
             ...prevData,
             [name]: value,
         }));
     };
 
-    // Handle saving the changes to the database
     const handleSaveChanges = async () => {
         setSaving(true); // Set saving state to true
+        const token = localStorage.getItem('token'); // Get token from localStorage
+
+        if (!token) {
+            Swal.fire({
+                title: "Error",
+                icon: "error",
+                text: "No authentication token found. Please log in.",
+            });
+            setSaving(false);
+            return;
+        }
+
         try {
             const response = await fetch(`http://localhost:4000/voters/${selectedVoter._id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` // Send the token in Authorization header
                 },
                 body: JSON.stringify(voterData),
             });
 
+            if (!response.ok) {
+                throw new Error('Failed to update voter details');
+            }
+
             const result = await response.json();
+
             if (result === true) {
                 setVoters((prevVoters) =>
                     prevVoters.map((voter) =>
@@ -117,7 +145,7 @@ const VoterList = ({ searchResults }) => {
                 Swal.fire({
                     title: "Error",
                     icon: "error",
-                    text: "Please try again",
+                    text: "Failed to update voter details. Please try again.",
                 });
             }
         } catch (error) {
@@ -125,7 +153,7 @@ const VoterList = ({ searchResults }) => {
             Swal.fire({
                 title: "Error",
                 icon: "error",
-                text: "An error occurred while updating voter details",
+                text: error.message || "An error occurred while updating voter details",
             });
         } finally {
             setSaving(false); // Reset saving state
@@ -133,14 +161,20 @@ const VoterList = ({ searchResults }) => {
         }
     };
 
+
+
     return (
         <>
-            <h2 style={{ color: '#5E17EB' }} className="mb-2"><strong>Voter's List</strong></h2>
-            <div className='result_window'>
+            <div className='d-flex justify-content-between mb-2'>
+                <h2 style={{ color: '#5E17EB' }}><strong>Voter's List</strong></h2>
+                <h2 style={{ color: '#5E17EB', fontWeight: 'bold' }}>Total Voters Count: {voters.length}</h2>
+            </div>
+
+            <div className='result_window mb-3'>
 
                 {loading ? (
                     // Show the TailSpin spinner while loading
-                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '5%', marginBottom: '5%' }}>
                         <TailSpin height="80" width="80" color="blue" ariaLabel="loading" />
                     </div>
                 ) : error ? (
@@ -149,11 +183,10 @@ const VoterList = ({ searchResults }) => {
                     <p>No voters found</p>
                 ) : (
                     <>
-                        <table border="1" cellPadding="10" cellSpacing="0">
+                        <table cellPadding="10" cellSpacing="0">
                             <thead>
-                                <tr>
+                                <tr className='table_header'>
                                     <th>Precinct Number</th>
-                                    <th>Clustered Precinct</th>
                                     <th>Full Name</th>
                                     <th>Address</th>
                                     <th>Barangay</th>
@@ -164,12 +197,11 @@ const VoterList = ({ searchResults }) => {
                                 {currentVoters.map((voter) => (
                                     <tr key={voter._id}>
                                         <td>{voter.precint_number}</td>
-                                        <td>{voter.clustered_precint}</td>
                                         <td>{voter.fullname}</td>
                                         <td>{voter.address}</td>
                                         <td>{voter.barangay}</td>
                                         <td>
-                                            <button id='edit_button' onClick={() => handleEditClick(voter)}>Edit</button>
+                                            <Button id='edit_button' variant="outline-primary" onClick={() => handleEditClick(voter)}>Edit</Button>
                                         </td>
                                     </tr>
                                 ))}
@@ -177,20 +209,20 @@ const VoterList = ({ searchResults }) => {
                         </table>
 
                         {/* Pagination Controls */}
-                        <div style={{ marginTop: '20px' }}>
-                            <button onClick={handleFirstPage} disabled={currentPage === 1}>
+                        <div style={{ marginTop: '20px' }} className='text-center mb-3'>
+                            <Button variant="info" className='mx-2' onClick={handleFirstPage} disabled={currentPage === 1}>
                                 {'<<'} First
-                            </button>
-                            <button onClick={handlePreviousPage} disabled={currentPage === 1}>
+                            </Button>
+                            <Button variant="info" className='mx-2' onClick={handlePreviousPage} disabled={currentPage === 1}>
                                 Previous
-                            </button>
+                            </Button>
                             <span style={{ margin: '0 20px' }}>Page {currentPage} of {totalPages}</span>
-                            <button onClick={handleNextPage} disabled={currentPage === totalPages}>
+                            <Button variant="info" className='mx-2' onClick={handleNextPage} disabled={currentPage === totalPages}>
                                 Next
-                            </button>
-                            <button onClick={handleLastPage} disabled={currentPage === totalPages}>
+                            </Button>
+                            <Button variant="info" className='mx-2' onClick={handleLastPage} disabled={currentPage === totalPages}>
                                 Last {'>>'}
-                            </button>
+                            </Button>
                         </div>
                     </>
                 )}
@@ -241,10 +273,12 @@ const VoterList = ({ searchResults }) => {
                             <Form.Group>
                                 <Form.Label>Birthday</Form.Label>
                                 <Form.Control
-                                    type="date"
+                                    type="text"
                                     name="birthday"
                                     value={voterData.birthday || ''}
                                     onChange={handleInputChange}
+                                    placeholder="MM-DD-YYYY"
+                                    pattern="\d{2}-\d{2}-\d{4}" // Ensures format MM-DD-YYYY
                                 />
                             </Form.Group>
                             <Form.Group>
@@ -259,11 +293,16 @@ const VoterList = ({ searchResults }) => {
                             <Form.Group>
                                 <Form.Label>Category</Form.Label>
                                 <Form.Control
-                                    type="text"
+                                    as="select"
                                     name="category"
                                     value={voterData.category || ''}
                                     onChange={handleInputChange}
-                                />
+                                >
+                                    <option value="">Select Category</option>
+                                    <option value="GREEN">Senior Citizen</option>
+                                    <option value="RED">PWD</option>
+                                    <option value="YELLOW">Illiterate</option>
+                                </Form.Control>
                             </Form.Group>
                             <Form.Group>
                                 <Form.Label>Barangay</Form.Label>

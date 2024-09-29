@@ -1,12 +1,10 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import UserContext from '../UserContext';
 import Swal from 'sweetalert2'
 
 export default function Register() {
-    const { user } = useContext(UserContext);
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");

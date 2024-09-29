@@ -43,14 +43,20 @@ background-image: linear-gradient(160deg, #630d95 0%, #ca1619 100%);
 }
 
 .result_window {
-  border: 4px solid #7650ff;
+border: 4px solid #7650ff;
 background: #ffffff;
+text-align: center;
 }
 
-#edit_button {
-  box-shadow: 0 8px 6px -6px gray;
-  --webkit-box-shadow: 0 8px 6px -6px gray;
-  border-bottom: 0.5px;
+table {
+  width: 100%;
+}
+
+.table_header {
+  background: #7650ff;
+  color: white;
+  text-align: center;
+  font-size: medium;
 }
 
 .App-header {
