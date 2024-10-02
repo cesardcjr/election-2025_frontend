@@ -6,7 +6,6 @@ import UserContext from '../UserContext';
 import Layout from '../components/Layout';
 
 export default function Login() {
-
     const { user, setUser } = useContext(UserContext);
     const [username, setUserName] = useState('');
     const [password, setPassword] = useState('');
@@ -14,10 +13,8 @@ export default function Login() {
     const navigate = useNavigate();
 
     function authenticate(e) {
-
         e.preventDefault();
         fetch('http://localhost:4000/users/login', {
-
             method: 'POST',
             headers: {
                 "Content-Type": "application/json"
@@ -29,58 +26,62 @@ export default function Login() {
         })
             .then(res => res.json())
             .then(data => {
-
                 if (typeof data.access !== "undefined") {
-
+                    // Save the token in localStorage
                     localStorage.setItem('token', data.access);
                     retrieveUserDetails(data.access);
-                    setUser({
-                        access: localStorage.getItem('token')
-                    })
-                    Swal.fire({
-                        title: "Authentication Success",
-                        icon: "success",
-                        text: "Logged-in Successfully!"
-                    })
-                        .then(() => {
-                            navigate('/')
-                        })
                 } else {
                     Swal.fire({
                         title: "Authentication Failed",
                         icon: "error",
                         text: "Please check your username and password"
-                    })
+                    });
                 }
-            })
+            });
+
         setUserName('');
         setPassword('');
     }
 
     const retrieveUserDetails = (token) => {
-
         fetch('http://localhost:4000/users/details', {
             headers: {
-                Authorization: `Bearer ${token} `
+                Authorization: `Bearer ${token}`
             }
         })
             .then(res => res.json())
             .then(data => {
                 setUser({
                     id: data._id,
-                    isAdmin: data.isAdmin
+                    isAdmin: data.isAdmin,
+                    access: token
+                });
+
+                // After setting user details, redirect based on admin status
+                Swal.fire({
+                    title: "Authentication Success",
+                    icon: "success",
+                    text: "Logged-in Successfully!"
                 })
-            })
+                    .then(() => {
+                        if (data.isAdmin) {
+                            navigate('/userList'); // Redirect to user list if admin
+                        } else {
+                            navigate('/'); // Redirect to home page if not admin
+                        }
+                    });
+            });
     }
 
     useEffect(() => {
-
+        // Check if username and password are not empty
         if (username !== '' && password !== '') {
             setIsActive(true);
         } else {
             setIsActive(false);
         }
     }, [username, password]);
+
     return (
         <Layout>
             <div className='login'>
@@ -109,17 +110,16 @@ export default function Login() {
                     </Form.Group>
 
                     {isActive ?
-                        <Button className="mt-3" variant="primary" type="submit" id="submitBtn" to="/products">
+                        <Button className="mt-3" variant="primary" type="submit">
                             Submit
                         </Button>
                         :
-                        <Button className="mt-3" variant="danger" type="submit" id="submitBtn" disabled>
+                        <Button className="mt-3" variant="danger" type="submit" disabled>
                             Submit
                         </Button>
                     }
                 </Form>
             </div>
         </Layout>
-    )
-
+    );
 }

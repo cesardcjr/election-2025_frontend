@@ -9,6 +9,9 @@ import HomePage from './pages/Homepage';
 import { UserProvider } from './UserContext';
 import VoterList from './pages/VotersList';
 import Profile from './user/Profile';
+import UserList from './admin/UserList';
+import Dashboard from './admin/VoterDashboard';
+import AuditTrail from './admin/AuditTrail';
 
 function App() {
 
@@ -62,12 +65,16 @@ function App() {
   return (
     <UserProvider value={{ user, setUser, unsetUser }}>
       <Routes>
+        {/* Redirect the root path ('/') to the login page if the user is not authenticated */}
         <Route path='/' element={user.id ? <HomePage /> : <Navigate to="/login" />} />
         <Route path="/login" element={user.id ? <Navigate to="/" /> : <Login />} />
         <Route path="/register" element={user.id ? <Navigate to="/" /> : <Register />} />
         <Route path="/all" element={<ProtectedRoute element={<VoterList />} />} />
         <Route path="/logout" element={<ProtectedRoute element={<Logout />} />} />
         <Route path="/myProfile" element={<Profile />} />
+        <Route path="/userList" element={<UserList />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/audit" element={<AuditTrail />} />
       </Routes>
     </UserProvider>
   );

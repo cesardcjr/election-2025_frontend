@@ -19,8 +19,8 @@ export default function HomePage() {
         fetch(`http://localhost:4000/voters/all`)
             .then((res) => res.json())
             .then((data) => {
-                setVoters(data); // Set the fetched voters to the state
-                setFilteredVoters(data); // Set filteredVoters to display all initially
+                setVoters(data);
+                setFilteredVoters(data);
             });
     };
 
@@ -145,72 +145,72 @@ export default function HomePage() {
                             <ListGroup.Item
                                 action
                                 href="#"
-                                onClick={() => handleBarangaySelect('Borol 1st')}
-                                active={selectedBarangay === 'Borol 1st'}
+                                onClick={() => handleBarangaySelect('BOROL 1ST')}
+                                active={selectedBarangay === 'BOROL 1ST'}
                             >
                                 Borol 1st
                             </ListGroup.Item>
                             <ListGroup.Item
                                 action
                                 href="#"
-                                onClick={() => handleBarangaySelect('Borol 2nd')}
-                                active={selectedBarangay === 'Borol 2nd'}
+                                onClick={() => handleBarangaySelect('BOROL 2ND')}
+                                active={selectedBarangay === 'BOROL 2ND'}
                             >
                                 Borol 2nd
                             </ListGroup.Item>
                             <ListGroup.Item
                                 action
                                 href="#"
-                                onClick={() => handleBarangaySelect('Dalig')}
-                                active={selectedBarangay === 'Dalig'}
+                                onClick={() => handleBarangaySelect('DALIG')}
+                                active={selectedBarangay === 'DALIG'}
                             >
                                 Dalig
                             </ListGroup.Item>
                             <ListGroup.Item
                                 action
                                 href="#"
-                                onClick={() => handleBarangaySelect('Longos')}
-                                active={selectedBarangay === 'Longos'}
+                                onClick={() => handleBarangaySelect('LONGOS')}
+                                active={selectedBarangay === 'LONGOS'}
                             >
                                 Longos
                             </ListGroup.Item>
                             <ListGroup.Item
                                 action
                                 href="#"
-                                onClick={() => handleBarangaySelect('Panginay')}
-                                active={selectedBarangay === 'Panginay'}
+                                onClick={() => handleBarangaySelect('PANGINAY')}
+                                active={selectedBarangay === 'PANGINAY'}
                             >
                                 Panginay
                             </ListGroup.Item>
                             <ListGroup.Item
                                 action
                                 href="#"
-                                onClick={() => handleBarangaySelect('Pulong Gubat')}
-                                active={selectedBarangay === 'Pulong Gubat'}
+                                onClick={() => handleBarangaySelect('PULONG GUBAT')}
+                                active={selectedBarangay === 'PULONG GUBAT'}
                             >
                                 Pulong Gubat
                             </ListGroup.Item>
                             <ListGroup.Item
                                 action
                                 href="#"
-                                onClick={() => handleBarangaySelect('San Juan')}
-                                active={selectedBarangay === 'San Juan'}
+                                onClick={() => handleBarangaySelect('SAN JUAN')}
+                                active={selectedBarangay === 'SAN JUAN'}
                             >
                                 San Juan
                             </ListGroup.Item>
                             <ListGroup.Item
                                 action
                                 href="#"
-                                onClick={() => handleBarangaySelect('Santol')}
-                                active={selectedBarangay === 'Santol'}
+                                onClick={() => handleBarangaySelect('SANTOL')}
+                                active={selectedBarangay === 'SANTOL'}
                             >
                                 Santol
                             </ListGroup.Item>
                             <ListGroup.Item
                                 action
                                 href="#"
-                                onClick={() => handleBarangaySelect('Wawa')}
-                                active={selectedBarangay === 'Wawa'}
+                                onClick={() => handleBarangaySelect('WAWA')}
+                                active={selectedBarangay === 'WAWA'}
                             >
                                 Wawa
                             </ListGroup.Item>
