@@ -8,14 +8,14 @@ const VoterList = ({ searchResults }) => {
     const [loading, setLoading] = useState(true); // Loading state to handle spinner
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(1); // Current page state
-    const votersPerPage = 25; // Number of voters to display per page
-    const [showModal, setShowModal] = useState(false); // Modal visibility state
+    const votersPerPage = 15; // Number of voters to display per page
+    const [showModal, setShowModal] = useState(false); // Modal visibility state for editing
+    const [showAddModal, setShowAddModal] = useState(false); // Modal visibility state for adding
     const [selectedVoter, setSelectedVoter] = useState(null); // Currently selected voter for editing
     const [voterData, setVoterData] = useState({}); // Voter data to edit
     const [saving, setSaving] = useState(false); // State to track saving process
 
     useEffect(() => {
-
         if (searchResults && searchResults.length > 0) {
             setVoters(searchResults);
             setLoading(false);
@@ -44,15 +44,11 @@ const VoterList = ({ searchResults }) => {
             });
     };
 
-    // Calculate the total number of pages
     const totalPages = Math.ceil(voters.length / votersPerPage);
-
-    // Calculate the start and end index for the current page
     const startIndex = (currentPage - 1) * votersPerPage;
     const endIndex = startIndex + votersPerPage;
     const currentVoters = voters.slice(startIndex, endIndex);
 
-    // Handle clicking on the pagination buttons
     const handleNextPage = () => {
         if (currentPage < totalPages) {
             setCurrentPage(currentPage + 1);
@@ -73,36 +69,32 @@ const VoterList = ({ searchResults }) => {
         setCurrentPage(totalPages);
     };
 
-    // Open Modal and populate voter data
+    // Open modal for editing voter
     const handleEditClick = (voter) => {
         setSelectedVoter(voter);
-        setVoterData({ ...voter }); // Clone the voter data for editing
+        setVoterData({ ...voter });
         setShowModal(true);
     };
 
-    // Handle input change in the modal form
+    // Handle input change in forms
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-
-        // Validate MM-DD-YYYY format
-        if (name === 'birthday') {
-            const isValidDate = /^\d{2}-\d{2}-\d{4}$/.test(value);
-            if (!isValidDate) {
-                console.log("Invalid date format, please use MM-DD-YYYY");
-
-            } else {
-                console.log("Valid date");
-            }
-        }
         setVoterData((prevData) => ({
             ...prevData,
             [name]: value,
         }));
     };
 
+    // Open modal for adding a new voter
+    const handleAddClick = () => {
+        setSelectedVoter(null);
+        setVoterData({}); // Reset form data
+        setShowAddModal(true); // Show add modal
+    };
+
     const handleSaveChanges = async () => {
-        setSaving(true); // Set saving state to true
-        const token = localStorage.getItem('token'); // Get token from localStorage
+        setSaving(true);
+        const token = localStorage.getItem('token');
 
         if (!token) {
             Swal.fire({
@@ -114,66 +106,79 @@ const VoterList = ({ searchResults }) => {
             return;
         }
 
+        const decodedToken = JSON.parse(atob(token.split('.')[1]));
+        const userId = decodedToken.userId;
+
         try {
-            const response = await fetch(`http://localhost:4000/voters/${selectedVoter._id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // Send the token in Authorization header
-                },
-                body: JSON.stringify(voterData),
-            });
+            let response;
+            if (selectedVoter) {
+                response = await fetch(`http://localhost:4000/voters/${selectedVoter._id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ ...voterData, updated_by: userId }),
+                });
+            } else {
+                response = await fetch('http://localhost:4000/voters/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ ...voterData, updated_by: userId }),
+                });
+            }
 
             if (!response.ok) {
-                throw new Error('Failed to update voter details');
+                throw new Error('Failed to save voter details');
             }
 
             const result = await response.json();
-
-            if (result === true) {
+            if (result === true || result._id) {
                 setVoters((prevVoters) =>
-                    prevVoters.map((voter) =>
-                        voter._id === selectedVoter._id ? voterData : voter
-                    )
+                    selectedVoter
+                        ? prevVoters.map((voter) => (voter._id === selectedVoter._id ? voterData : voter))
+                        : [...prevVoters, result]
                 );
+
                 Swal.fire({
                     title: "Success!",
                     icon: "success",
-                    text: "Voter information has been updated successfully!",
+                    text: selectedVoter
+                        ? "Voter information has been updated successfully!"
+                        : "New voter has been added successfully!",
                 });
             } else {
-                Swal.fire({
-                    title: "Error",
-                    icon: "error",
-                    text: "Failed to update voter details. Please try again.",
-                });
+                throw new Error('Failed to save voter details');
             }
         } catch (error) {
-            console.error('Error updating voter:', error);
+            console.error('Error saving voter:', error);
             Swal.fire({
                 title: "Error",
                 icon: "error",
-                text: error.message || "An error occurred while updating voter details",
+                text: error.message || "An error occurred while saving voter details",
             });
         } finally {
-            setSaving(false); // Reset saving state
-            setShowModal(false); // Close the modal after saving
+            setSaving(false);
+            setShowModal(false);
+            setShowAddModal(false); // Close add modal as well
         }
     };
-
-
 
     return (
         <>
             <div className='d-flex justify-content-between mb-2'>
                 <h2 style={{ color: '#5E17EB' }}><strong>Voter's List</strong></h2>
+                <Button variant="primary" onClick={handleAddClick}>
+                    Add Voter
+                </Button>
                 <h2 style={{ color: '#5E17EB', fontWeight: 'bold' }}>Total Voters Count: {voters.length}</h2>
             </div>
 
             <div className='result_window mb-3'>
-
                 {loading ? (
-                    // Show the TailSpin spinner while loading
                     <div style={{ display: 'flex', justifyContent: 'center', marginTop: '5%', marginBottom: '5%' }}>
                         <TailSpin height="80" width="80" color="blue" ariaLabel="loading" />
                     </div>
@@ -208,7 +213,6 @@ const VoterList = ({ searchResults }) => {
                             </tbody>
                         </table>
 
-                        {/* Pagination Controls */}
                         <div style={{ marginTop: '20px' }} className='text-center mb-3'>
                             <Button variant="info" className='mx-2' onClick={handleFirstPage} disabled={currentPage === 1}>
                                 {'<<'} First
@@ -230,11 +234,11 @@ const VoterList = ({ searchResults }) => {
                 {/* Modal for Editing Voter */}
                 <Modal show={showModal} onHide={() => setShowModal(false)}>
                     <Modal.Header closeButton>
-                        <Modal.Title>Edit Voter</Modal.Title>
+                        <Modal.Title>Edit Voter Information</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         <Form>
-                            <Form.Group>
+                            <Form.Group controlId="formPrecinctNumber">
                                 <Form.Label>Precinct Number</Form.Label>
                                 <Form.Control
                                     type="text"
@@ -243,16 +247,8 @@ const VoterList = ({ searchResults }) => {
                                     onChange={handleInputChange}
                                 />
                             </Form.Group>
-                            <Form.Group>
-                                <Form.Label>Clustered Precinct</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="clustered_precint"
-                                    value={voterData.clustered_precint || ''}
-                                    onChange={handleInputChange}
-                                />
-                            </Form.Group>
-                            <Form.Group>
+
+                            <Form.Group controlId="formFullName">
                                 <Form.Label>Full Name</Form.Label>
                                 <Form.Control
                                     type="text"
@@ -261,7 +257,29 @@ const VoterList = ({ searchResults }) => {
                                     onChange={handleInputChange}
                                 />
                             </Form.Group>
-                            <Form.Group>
+
+                            <Form.Group controlId="formBarangay">
+                                <Form.Label>Barangay</Form.Label>
+                                <Form.Select
+                                    name="barangay"
+                                    value={voterData.barangay || ''}
+                                    onChange={handleInputChange}
+                                >
+                                    <option value="">Select Barangay</option>
+                                    <option value="BOROL 1ST">BOROL 1ST</option>
+                                    <option value="BOROL 2ND">BOROL 2ND</option>
+                                    <option value="DALIG">DALIG</option>
+                                    <option value="LONGOS">LONGOS</option>
+                                    <option value="PANGINAY">PANGINAY</option>
+                                    <option value="PULONG GUBAT">PULONG GUBAT</option>
+                                    <option value="SAN JUAN">SAN JUAN</option>
+                                    <option value="SANTOL">SANTOL</option>
+                                    <option value="WAWA">WAWA</option>
+
+                                </Form.Select>
+                            </Form.Group>
+
+                            <Form.Group controlId="formAddress">
                                 <Form.Label>Address</Form.Label>
                                 <Form.Control
                                     type="text"
@@ -270,6 +288,7 @@ const VoterList = ({ searchResults }) => {
                                     onChange={handleInputChange}
                                 />
                             </Form.Group>
+
                             <Form.Group>
                                 <Form.Label>Birthday</Form.Label>
                                 <Form.Control
@@ -290,39 +309,19 @@ const VoterList = ({ searchResults }) => {
                                     onChange={handleInputChange}
                                 />
                             </Form.Group>
-                            <Form.Group>
-                                <Form.Label>Category</Form.Label>
-                                <Form.Control
-                                    as="select"
-                                    name="category"
-                                    value={voterData.category || ''}
+                            <Form.Group controlId="formColor">
+                                <Form.Label>Color</Form.Label>
+                                <Form.Select
+                                    name="color"
+                                    value={voterData.color || ''}
                                     onChange={handleInputChange}
                                 >
-                                    <option value="">Select Category</option>
-                                    <option value="GREEN">Senior Citizen</option>
-                                    <option value="RED">PWD</option>
-                                    <option value="YELLOW">Illiterate</option>
-                                </Form.Control>
-                            </Form.Group>
-                            <Form.Group>
-                                <Form.Label>Barangay</Form.Label>
-                                <Form.Control
-                                    as="select" // Change to select type
-                                    name="barangay"
-                                    value={voterData.barangay || ''} // The selected value
-                                    onChange={handleInputChange} // Handle change
-                                >
-                                    <option value="">Select Barangay</option>
-                                    <option value="Borol 1st">Borol 1st</option>
-                                    <option value="Borol 2nd">Borol 2nd</option>
-                                    <option value="Dalig">Dalig</option>
-                                    <option value="Longos">Longos</option>
-                                    <option value="Panginay">Panginay</option>
-                                    <option value="Pulong Gubat">Pulong Gubat</option>
-                                    <option value="San Juan">San Juan</option>
-                                    <option value="Santol">Santol</option>
-                                    <option value="Wawa">Wawa</option>
-                                </Form.Control>
+                                    <option value="">Select Color</option>
+                                    <option value="RED">RED</option>
+                                    <option value="YELLOW">YELLOW</option>
+                                    <option value="BLUE">BLUE</option>
+
+                                </Form.Select>
                             </Form.Group>
                             <Form.Group>
                                 <Form.Label>Referred By</Form.Label>
@@ -334,24 +333,93 @@ const VoterList = ({ searchResults }) => {
                                 />
                             </Form.Group>
                             <Form.Group>
-                                <Form.Label>Color</Form.Label>
+                                <Form.Label>Remarks</Form.Label>
                                 <Form.Control
-                                    as="select" // Change to select type
-                                    name="color"
-                                    value={voterData.color || ''} // The selected value
-                                    onChange={handleInputChange} // Handle change
-                                >
-                                    <option value="">Select Color</option>
-                                    <option value="GREEN">GREEN</option>
-                                    <option value="RED">RED</option>
-                                    <option value="YELLOW">YELLOW</option>
-                                </Form.Control>
+                                    type="text"
+                                    name="remarks"
+                                    value={voterData.remarks || ''}
+                                    onChange={handleInputChange}
+                                />
                             </Form.Group>
                         </Form>
                     </Modal.Body>
                     <Modal.Footer>
                         <Button variant="secondary" onClick={() => setShowModal(false)}>
-                            Cancel
+                            Close
+                        </Button>
+                        <Button variant="primary" onClick={handleSaveChanges} disabled={saving}>
+                            {saving ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+
+                {/* Modal for Adding Voter */}
+                <Modal show={showAddModal} onHide={() => setShowAddModal(false)}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Add New Voter</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <Form>
+                            <Form.Group controlId="formPrecinctNumber">
+                                <Form.Label>Precinct Number</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="precint_number"
+                                    value={voterData.precint_number || ''}
+                                    onChange={handleInputChange}
+                                />
+                            </Form.Group>
+
+                            <Form.Group controlId="formFullName">
+                                <Form.Label>Full Name</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="fullname"
+                                    value={voterData.fullname || ''}
+                                    onChange={handleInputChange}
+                                />
+                            </Form.Group>
+
+                            <Form.Group controlId="formBarangay">
+                                <Form.Label>Barangay</Form.Label>
+                                <Form.Select
+                                    name="barangay"
+                                    value={voterData.barangay || ''}
+                                    onChange={handleInputChange}
+                                >
+                                    <option value="">Select Barangay</option>
+                                    <option value="BOROL 1ST">BOROL 1ST</option>
+                                    <option value="BOROL 2ND">BOROL 2ND</option>
+                                    <option value="DALIG">DALIG</option>
+                                    <option value="LONGOS">LONGOS</option>
+                                    <option value="PANGINAY">PANGINAY</option>
+                                    <option value="PULONG GUBAT">PULONG GUBAT</option>
+                                    <option value="SAN JUAN">SAN JUAN</option>
+                                    <option value="SANTOL">SANTOL</option>
+                                    <option value="WAWA">WAWA</option>
+
+                                </Form.Select>
+                            </Form.Group>
+
+                            <Form.Group controlId="formColor">
+                                <Form.Label>Color</Form.Label>
+                                <Form.Select
+                                    name="color"
+                                    value={voterData.color || ''}
+                                    onChange={handleInputChange}
+                                >
+                                    <option value="">Select Color</option>
+                                    <option value="RED">RED</option>
+                                    <option value="YELLOW">YELLOW</option>
+                                    <option value="BLUE">BLUE</option>
+
+                                </Form.Select>
+                            </Form.Group>
+                        </Form>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={() => setShowAddModal(false)}>
+                            Close
                         </Button>
                         <Button variant="primary" onClick={handleSaveChanges} disabled={saving}>
                             {saving ? 'Saving...' : 'Save Changes'}

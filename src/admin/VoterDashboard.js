@@ -5,18 +5,22 @@ import { Container, Row, Col, Table, Button, Spinner } from 'react-bootstrap';
 import { TailSpin } from 'react-loader-spinner';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 export default function Dashboard() {
     const [voters, setVoters] = useState([]);
-    const [loading, setLoading] = useState(true); // Loading state to handle spinner
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        fetchAllVoters(); // Fetch voters when the component mounts
+        fetchAllVoters();
     }, []);
 
     const fetchAllVoters = () => {
-        setLoading(true); // Show the loader
+        setLoading(true);
         fetch('http://localhost:4000/voters/all')
             .then((res) => {
                 if (!res.ok) {
@@ -26,40 +30,72 @@ export default function Dashboard() {
             })
             .then((data) => {
                 setVoters(data);
-                setLoading(false); // Stop loading once data is fetched
+                setLoading(false);
             })
             .catch((error) => {
                 console.error('Error fetching voters:', error);
                 setError(error.message);
-                setLoading(false); // Stop loading if an error occurs
+                setLoading(false);
             });
     };
 
-    // Example metrics
-    const totalVoters = voters.length;
-    const greenVoters = voters.filter(voter => voter.color === 'GREEN').length;
-    const redVoters = voters.filter(voter => voter.color === 'RED').length;
-    const yellowVoters = voters.filter(voter => voter.color === 'YELLOW').length;
-    const borol1stVoters = voters.filter(voter => voter.barangay === 'BOROL 1ST').length;
-    const borol2ndVoters = voters.filter(voter => voter.barangay === 'BOROL 2ND').length;
-    const daligVoters = voters.filter(voter => voter.barangay === 'DALIG').length;
-    const longosVoters = voters.filter(voter => voter.barangay === 'LONGOS').length;
-    const panginayVoters = voters.filter(voter => voter.barangay === 'PANGINAY').length;
-    const pulongGubatVoters = voters.filter(voter => voter.barangay === 'PULONG GUBAT').length;
-    const santolVoters = voters.filter(voter => voter.barangay === 'SANTOL').length;
-    const sanJuanVoters = voters.filter(voter => voter.barangay === 'SAN JUAN').length;
-    const wawaVoters = voters.filter(voter => voter.barangay === 'WAWA').length;
+    // Barangay voter counts with color filters
+    const barangays = ['BOROL 1ST', 'BOROL 2ND', 'DALIG', 'LONGOS', 'PANGINAY', 'PULONG GUBAT', 'SANTOL', 'SAN JUAN', 'WAWA'];
 
-    // Function to generate PDF
+    const barangayColors = barangays.map(barangay => {
+        return {
+            barangay: barangay,
+            totalVoters: voters.filter(voter => voter.barangay === barangay).length,
+            redVoters: voters.filter(voter => voter.barangay === barangay && voter.color === 'RED').length,
+            blueVoters: voters.filter(voter => voter.barangay === barangay && voter.color === 'BLUE').length,
+            yellowVoters: voters.filter(voter => voter.barangay === barangay && voter.color === 'YELLOW').length
+        };
+    });
+
+    const totalVoters = voters.length;
+    const redVoters = voters.filter(voter => voter.color === 'RED').length;
+    const blueVoters = voters.filter(voter => voter.color === 'BLUE').length;
+    const yellowVoters = voters.filter(voter => voter.color === 'YELLOW').length;
+
+    const pieData = {
+        labels: barangayColors.map(b => b.barangay),
+        datasets: [
+            {
+                label: 'Voters per Barangay',
+                data: barangayColors.map(b => b.totalVoters),
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF',
+                    '#FF9F40',
+                    '#FFCD56',
+                    '#C9CBCF',
+                    '#4D5360',
+                ],
+                hoverBackgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF',
+                    '#FF9F40',
+                    '#FFCD56',
+                    '#C9CBCF',
+                    '#4D5360',
+                ]
+            }
+        ]
+    };
+
     const generatePDF = () => {
         const input = document.getElementById('reportContent');
-
-        // Convert the content into an image using html2canvas
         html2canvas(input, { scale: 2 }).then((canvas) => {
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'mm', 'a4');
-            const imgWidth = 210; // A4 width in mm
-            const pageHeight = 297; // A4 height in mm
+            const imgWidth = 210;
+            const pageHeight = 297;
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
             let heightLeft = imgHeight;
@@ -87,7 +123,6 @@ export default function Dashboard() {
                         <AdminMenu />
                     </Col>
                     <Col md={9} sm={12}>
-                        {/* Loading spinner or error handling */}
                         {loading ? (
                             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '5%', marginBottom: '5%' }}>
                                 <TailSpin height="80" width="80" color="blue" ariaLabel="loading" />
@@ -105,52 +140,23 @@ export default function Dashboard() {
                                             <tr>
                                                 <th>Barangay</th>
                                                 <th>Total Voters</th>
+                                                <th>Total <span style={{ color: "red", fontWeight: "bold" }}>RED</span> Voters</th>
+                                                <th>Total <span style={{ color: "blue", fontWeight: "bold" }}>BLUE</span> Voters</th>
+                                                <th>Total <span style={{ color: "yellow", fontWeight: "bold" }}>YELLOW</span> Voters</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr>
-                                                <td>Total Voters</td>
-                                                <td>{totalVoters}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Borol 1st</td>
-                                                <td>{borol1stVoters}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Borol 2nd</td>
-                                                <td>{borol2ndVoters}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Dalig</td>
-                                                <td>{daligVoters}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Longos</td>
-                                                <td>{longosVoters}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Panginay</td>
-                                                <td>{panginayVoters}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Pulong Gubat</td>
-                                                <td>{pulongGubatVoters}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Santol</td>
-                                                <td>{santolVoters}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>San Juan</td>
-                                                <td>{sanJuanVoters}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Wawa</td>
-                                                <td>{wawaVoters}</td>
-                                            </tr>
+                                            {barangayColors.map(({ barangay, totalVoters, redVoters, blueVoters, yellowVoters }) => (
+                                                <tr key={barangay}>
+                                                    <td>{barangay}</td>
+                                                    <td>{totalVoters}</td>
+                                                    <td>{redVoters}</td>
+                                                    <td>{blueVoters}</td>
+                                                    <td>{yellowVoters}</td>
+                                                </tr>
+                                            ))}
                                         </tbody>
                                     </Table>
-
 
                                     <h1 style={{ color: '#5E17EB' }}>
                                         <strong>Municipal Voter's Dashboard</strong>
@@ -160,7 +166,7 @@ export default function Dashboard() {
                                         <Table striped bordered hover>
                                             <thead>
                                                 <tr>
-                                                    <th>Metric</th>
+                                                    <th>Category</th>
                                                     <th>Value</th>
                                                 </tr>
                                             </thead>
@@ -170,15 +176,15 @@ export default function Dashboard() {
                                                     <td>{totalVoters}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Green Voters (Senior Citizens)</td>
-                                                    <td>{greenVoters}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Red Voters (PWD)</td>
+                                                    <td>Red Voters</td>
                                                     <td>{redVoters}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Yellow Voters (Illiterate)</td>
+                                                    <td>Blue Voters</td>
+                                                    <td>{blueVoters}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Yellow Voters</td>
                                                     <td>{yellowVoters}</td>
                                                 </tr>
                                             </tbody>
@@ -186,7 +192,6 @@ export default function Dashboard() {
                                     </div>
                                 </div>
 
-                                {/* Button to Download PDF */}
                                 <Button variant="primary" onClick={generatePDF} className="mt-3">
                                     Download Report as PDF
                                 </Button>
@@ -195,6 +200,6 @@ export default function Dashboard() {
                     </Col>
                 </Row>
             </Container>
-        </Layout>
+        </Layout >
     );
 }
