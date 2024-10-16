@@ -14,7 +14,7 @@ export default function Login() {
 
     function authenticate(e) {
         e.preventDefault();
-        fetch('http://localhost:4000/users/login', {
+        fetch('http://192.168.3.92:4000/users/login', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json"
@@ -27,7 +27,7 @@ export default function Login() {
             .then(res => res.json())
             .then(data => {
                 if (typeof data.access !== "undefined") {
-                    // Save the token in localStorage
+
                     localStorage.setItem('token', data.access);
                     retrieveUserDetails(data.access);
                 } else {
@@ -44,7 +44,7 @@ export default function Login() {
     }
 
     const retrieveUserDetails = (token) => {
-        fetch('http://localhost:4000/users/details', {
+        fetch('http://192.168.3.92:4000/users/details', {
             headers: {
                 Authorization: `Bearer ${token}`
             }

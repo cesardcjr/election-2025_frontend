@@ -21,7 +21,7 @@ export default function Dashboard() {
 
     const fetchAllVoters = () => {
         setLoading(true);
-        fetch('http://localhost:4000/voters/all')
+        fetch('http://192.168.3.92:4000/voters/all')
             .then((res) => {
                 if (!res.ok) {
                     throw new Error('Failed to fetch voters');

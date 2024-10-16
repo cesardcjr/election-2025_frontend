@@ -26,7 +26,7 @@ const VoterList = ({ searchResults }) => {
 
     const fetchAllVoters = () => {
         setLoading(true); // Show the loader
-        fetch('http://localhost:4000/voters/all')
+        fetch('http://192.168.3.92:4000/voters/all')
             .then((res) => {
                 if (!res.ok) {
                     throw new Error('Failed to fetch voters');
@@ -112,7 +112,7 @@ const VoterList = ({ searchResults }) => {
         try {
             let response;
             if (selectedVoter) {
-                response = await fetch(`http://localhost:4000/voters/${selectedVoter._id}`, {
+                response = await fetch(`http://192.168.3.92:4000/voters/${selectedVoter._id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -121,7 +121,7 @@ const VoterList = ({ searchResults }) => {
                     body: JSON.stringify({ ...voterData, updated_by: userId }),
                 });
             } else {
-                response = await fetch('http://localhost:4000/voters/add', {
+                response = await fetch('http://192.168.3.92:4000/voters/add', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -401,6 +401,23 @@ const VoterList = ({ searchResults }) => {
                                 </Form.Select>
                             </Form.Group>
 
+                            <Form.Group controlId="formCategory">
+                                <Form.Label>Category</Form.Label>
+                                <Form.Select
+                                    name="category"
+                                    value={voterData.category || ''}
+                                    onChange={handleInputChange}
+                                >
+                                    <option value="">Select Category</option>
+                                    <option value="PWD">PWD</option>
+                                    <option value="Senior Citizen">Senior Citizen</option>
+                                    <option value="Government Employee">Government Employee</option>
+                                    <option value="Youth">Youth</option>
+                                    <option value="Barangay Official">Barangay Official</option>
+
+                                </Form.Select>
+                            </Form.Group>
+
                             <Form.Group controlId="formColor">
                                 <Form.Label>Color</Form.Label>
                                 <Form.Select
@@ -414,6 +431,16 @@ const VoterList = ({ searchResults }) => {
                                     <option value="BLUE">BLUE</option>
 
                                 </Form.Select>
+                            </Form.Group>
+
+                            <Form.Group controlId="formRemarks">
+                                <Form.Label>Remarks</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="remarks"
+                                    value={voterData.remarks || ''}
+                                    onChange={handleInputChange}
+                                />
                             </Form.Group>
                         </Form>
                     </Modal.Body>

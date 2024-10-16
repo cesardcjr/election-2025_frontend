@@ -11,7 +11,7 @@ const AuditTrail = () => {
 
     useEffect(() => {
         // Fetch audit logs from the backend
-        fetch('http://localhost:4000/audit/all', {
+        fetch('http://192.168.3.92:4000/audit/all', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
