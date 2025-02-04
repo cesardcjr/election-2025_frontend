@@ -14,7 +14,7 @@ export default function Login() {
 
     function authenticate(e) {
         e.preventDefault();
-        fetch('http://192.168.3.92:4000/users/login', {
+        fetch('http://192.168.110.235:4000/users/login', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json"
@@ -44,7 +44,7 @@ export default function Login() {
     }
 
     const retrieveUserDetails = (token) => {
-        fetch('http://192.168.3.92:4000/users/details', {
+        fetch('http://192.168.110.235:4000/users/details', {
             headers: {
                 Authorization: `Bearer ${token}`
             }

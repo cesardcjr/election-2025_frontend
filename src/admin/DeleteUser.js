@@ -17,7 +17,7 @@ export default function DeleteUser({ userId, fetchData }) {
 
         if (result.isConfirmed) {
             try {
-                const response = await fetch(`http://localhost:4000/users/deleteUser`, {
+                const response = await fetch(`http://192.168.110.235:4000/users/deleteUser`, {
                     method: 'DELETE',
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`,

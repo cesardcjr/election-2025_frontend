@@ -26,7 +26,7 @@ const VoterList = ({ searchResults }) => {
 
     const fetchAllVoters = () => {
         setLoading(true); // Show the loader
-        fetch('http://192.168.3.92:4000/voters/all')
+        fetch('http://192.168.110.235:4000/voters/all')
             .then((res) => {
                 if (!res.ok) {
                     throw new Error('Failed to fetch voters');
@@ -112,7 +112,7 @@ const VoterList = ({ searchResults }) => {
         try {
             let response;
             if (selectedVoter) {
-                response = await fetch(`http://192.168.3.92:4000/voters/${selectedVoter._id}`, {
+                response = await fetch(`http://192.168.110.235:4000/voters/${selectedVoter._id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -121,7 +121,7 @@ const VoterList = ({ searchResults }) => {
                     body: JSON.stringify({ ...voterData, updated_by: userId }),
                 });
             } else {
-                response = await fetch('http://192.168.3.92:4000/voters/add', {
+                response = await fetch('http://192.168.110.235:4000/voters/add', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

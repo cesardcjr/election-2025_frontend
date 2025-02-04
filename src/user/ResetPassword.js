@@ -28,7 +28,7 @@ const ResetPassword = ({ user }) => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://192.168.3.92:4000/users/{user._id}/reset-password', {
+            const response = await fetch('http://192.168.110.235:4000/users/{user._id}/reset-password', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

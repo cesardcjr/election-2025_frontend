@@ -5,10 +5,6 @@ import { Container, Row, Col, Table, Button, Spinner } from 'react-bootstrap';
 import { TailSpin } from 'react-loader-spinner';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Pie } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-
-ChartJS.register(ArcElement, Tooltip, Legend);
 
 export default function Dashboard() {
     const [voters, setVoters] = useState([]);
@@ -21,7 +17,7 @@ export default function Dashboard() {
 
     const fetchAllVoters = () => {
         setLoading(true);
-        fetch('http://192.168.3.92:4000/voters/all')
+        fetch('http://192.168.110.235:4000/voters/all')
             .then((res) => {
                 if (!res.ok) {
                     throw new Error('Failed to fetch voters');
@@ -57,37 +53,6 @@ export default function Dashboard() {
     const blueVoters = voters.filter(voter => voter.color === 'BLUE').length;
     const yellowVoters = voters.filter(voter => voter.color === 'YELLOW').length;
 
-    const pieData = {
-        labels: barangayColors.map(b => b.barangay),
-        datasets: [
-            {
-                label: 'Voters per Barangay',
-                data: barangayColors.map(b => b.totalVoters),
-                backgroundColor: [
-                    '#FF6384',
-                    '#36A2EB',
-                    '#FFCE56',
-                    '#4BC0C0',
-                    '#9966FF',
-                    '#FF9F40',
-                    '#FFCD56',
-                    '#C9CBCF',
-                    '#4D5360',
-                ],
-                hoverBackgroundColor: [
-                    '#FF6384',
-                    '#36A2EB',
-                    '#FFCE56',
-                    '#4BC0C0',
-                    '#9966FF',
-                    '#FF9F40',
-                    '#FFCD56',
-                    '#C9CBCF',
-                    '#4D5360',
-                ]
-            }
-        ]
-    };
 
     const generatePDF = () => {
         const input = document.getElementById('reportContent');

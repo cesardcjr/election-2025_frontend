@@ -16,7 +16,7 @@ export default function HomePage() {
     }, []);
 
     const fetchAllVoters = () => {
-        fetch(`http://192.168.3.92:4000/voters/all`)
+        fetch(`http://192.168.110.235:4000/voters/all`)
             .then((res) => res.json())
             .then((data) => {
                 setVoters(data);
@@ -59,7 +59,7 @@ export default function HomePage() {
         e.preventDefault();
 
         // Search voters by fullname
-        fetch(`http://192.168.3.92:4000/voters/search`, {
+        fetch(`http://192.168.110.235:4000/voters/search`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -109,26 +109,26 @@ export default function HomePage() {
                             <ListGroup.Item
                                 action
                                 href="#"
-                                onClick={() => handleCategorySelect('sc')}
-                                active={selectedCategory === 'sc'}
+                                onClick={() => handleCategorySelect('SENIOR CITIZEN')}
+                                active={selectedCategory === 'SENIOR CITIZEN'}
                             >
                                 Senior Citizens
                             </ListGroup.Item>
                             <ListGroup.Item
                                 action
                                 href="#"
-                                onClick={() => handleCategorySelect('pwd')}
-                                active={selectedCategory === 'pwd'}
+                                onClick={() => handleCategorySelect('PWD')}
+                                active={selectedCategory === 'PWD'}
                             >
                                 PWD
                             </ListGroup.Item>
                             <ListGroup.Item
                                 action
                                 href="#"
-                                onClick={() => handleCategorySelect('illiterate')}
-                                active={selectedCategory === 'illiterate'}
+                                onClick={() => handleCategorySelect('YOUTH')}
+                                active={selectedCategory === 'YOUTH'}
                             >
-                                Illiterate
+                                Youth
                             </ListGroup.Item>
                         </ListGroup>
 
