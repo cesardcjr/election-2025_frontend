@@ -14,6 +14,7 @@ const VoterList = ({ searchResults }) => {
     const [selectedVoter, setSelectedVoter] = useState(null); // Currently selected voter for editing
     const [voterData, setVoterData] = useState({}); // Voter data to edit
     const [saving, setSaving] = useState(false); // State to track saving process
+    const [disabledVoterIds, setDisabledVoterIds] = useState([]);
 
     useEffect(() => {
         if (searchResults && searchResults.length > 0) {
@@ -26,7 +27,7 @@ const VoterList = ({ searchResults }) => {
 
     const fetchAllVoters = () => {
         setLoading(true); // Show the loader
-        fetch('http://192.168.110.235:4000/voters/all')
+        fetch('http://192.168.100.74:4000/voters/all')
             .then((res) => {
                 if (!res.ok) {
                     throw new Error('Failed to fetch voters');
@@ -92,6 +93,76 @@ const VoterList = ({ searchResults }) => {
         setShowAddModal(true); // Show add modal
     };
 
+    const handleReceiveClick = async (voter) => {
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+            Swal.fire({
+                title: "Error",
+                icon: "error",
+                text: "No authentication token found. Please log in.",
+            });
+            return;
+        }
+
+        const confirmed = await Swal.fire({
+            title: `Are you sure?`,
+            text: `Are you sure you want to mark ${voter.fullname} as RECEIVED?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+        });
+
+        if (!confirmed.isConfirmed) {
+            return; // User cancelled
+        }
+
+        // Disable the button for this voter
+        setDisabledVoterIds(prev => [...prev, voter._id]);
+
+        const decodedToken = JSON.parse(atob(token.split('.')[1]));
+        const userId = decodedToken.userId;
+
+        try {
+            const response = await fetch(`http://192.168.100.74:4000/voters/${voter._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ ...voter, status: 'RECEIVED', updated_by: userId }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update status');
+            }
+
+            setVoters((prevVoters) =>
+                prevVoters.map((v) =>
+                    v._id === voter._id ? { ...v, status: 'RECEIVED' } : v
+                )
+            );
+
+            Swal.fire({
+                title: "Success!",
+                icon: "success",
+                text: "Voter marked as RECEIVED.",
+            });
+        } catch (error) {
+            console.error('Error updating voter status:', error);
+            Swal.fire({
+                title: "Error",
+                icon: "error",
+                text: error.message || "An error occurred while updating status",
+            });
+            // Re-enable the button on error
+            setDisabledVoterIds(prev => prev.filter(id => id !== voter._id));
+        }
+    };
+
+
     const handleSaveChanges = async () => {
         setSaving(true);
         const token = localStorage.getItem('token');
@@ -112,7 +183,7 @@ const VoterList = ({ searchResults }) => {
         try {
             let response;
             if (selectedVoter) {
-                response = await fetch(`http://192.168.110.235:4000/voters/${selectedVoter._id}`, {
+                response = await fetch(`http://192.168.100.74:4000/voters/${selectedVoter._id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -121,7 +192,7 @@ const VoterList = ({ searchResults }) => {
                     body: JSON.stringify({ ...voterData, updated_by: userId }),
                 });
             } else {
-                response = await fetch('http://192.168.110.235:4000/voters/add', {
+                response = await fetch('http://192.168.100.74:4000/voters/add', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -196,6 +267,7 @@ const VoterList = ({ searchResults }) => {
                                     <th>Address</th>
                                     <th>Barangay</th>
                                     <th>Actions</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -208,6 +280,14 @@ const VoterList = ({ searchResults }) => {
                                         <td>
                                             <Button id='edit_button' variant="outline-primary" onClick={() => handleEditClick(voter)}>Edit</Button>
                                         </td>
+                                        <Button
+                                            style={{ marginTop: '10px', marginLeft: '10px' }}
+                                            variant="outline-success"
+                                            onClick={() => handleReceiveClick(voter)}
+                                            disabled={voter.status === 'RECEIVED'}
+                                        >
+                                            {voter.status === 'RECEIVED' ? 'Received' : 'Receive'}
+                                        </Button>
                                     </tr>
                                 ))}
                             </tbody>
@@ -237,34 +317,42 @@ const VoterList = ({ searchResults }) => {
                         <Modal.Title>Edit Voter Information</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        <Form>
+                        <Form
+                            style={{
+                                backgroundColor: (() => {
+                                    if (voterData.is_printed == 'true') {
+                                        return '#239b56';
+                                    } else {
+                                        return '#f4d03f';
+                                    }
+                                })(),
+                                padding: '15px',
+                                borderRadius: '5px'
+                            }}
+                        >
                             <Form.Group controlId="formPrecinctNumber">
                                 <Form.Label>Precinct Number</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="precint_number"
-                                    value={voterData.precint_number || ''}
-                                    onChange={handleInputChange}
-                                />
+                                <Form.Control type="text" name="precint_number" value={voterData.precint_number || ''} readOnly />
+                            </Form.Group>
+
+                            <Form.Group controlId="formClusteredPrecinctNumber">
+                                <Form.Label>Clustered Precinct Number</Form.Label>
+                                <Form.Control type="text" name="clustered_precint" value={voterData.clustered_precint || ''} readOnly />
+                            </Form.Group>
+
+                            <Form.Group controlId="formVolunteerIDNumber">
+                                <Form.Label>Volunteer ID No.</Form.Label>
+                                <Form.Control type="text" name="volunteer_id" value={voterData.volunteer_id || ''} readOnly />
                             </Form.Group>
 
                             <Form.Group controlId="formFullName">
                                 <Form.Label>Full Name</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="fullname"
-                                    value={voterData.fullname || ''}
-                                    onChange={handleInputChange}
-                                />
+                                <Form.Control type="text" name="fullname" value={voterData.fullname || ''} readOnly />
                             </Form.Group>
 
                             <Form.Group controlId="formBarangay">
                                 <Form.Label>Barangay</Form.Label>
-                                <Form.Select
-                                    name="barangay"
-                                    value={voterData.barangay || ''}
-                                    onChange={handleInputChange}
-                                >
+                                <Form.Select name="barangay" value={voterData.barangay || ''} onChange={handleInputChange}>
                                     <option value="">Select Barangay</option>
                                     <option value="BOROL 1ST">BOROL 1ST</option>
                                     <option value="BOROL 2ND">BOROL 2ND</option>
@@ -275,83 +363,54 @@ const VoterList = ({ searchResults }) => {
                                     <option value="SAN JUAN">SAN JUAN</option>
                                     <option value="SANTOL">SANTOL</option>
                                     <option value="WAWA">WAWA</option>
-
                                 </Form.Select>
                             </Form.Group>
 
                             <Form.Group controlId="formAddress">
                                 <Form.Label>Address</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="address"
-                                    value={voterData.address || ''}
-                                    onChange={handleInputChange}
-                                />
+                                <Form.Control type="text" name="address" value={voterData.address || ''} onChange={handleInputChange} />
                             </Form.Group>
 
                             <Form.Group>
                                 <Form.Label>Birthday</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="birthday"
-                                    value={voterData.birthday || ''}
-                                    onChange={handleInputChange}
-                                    placeholder="MM-DD-YYYY"
-                                    pattern="\d{2}-\d{2}-\d{4}" // Ensures format MM-DD-YYYY
-                                />
+                                <Form.Control type="text" name="birthday" value={voterData.birthday || ''} onChange={handleInputChange} placeholder="MM-DD-YYYY" pattern="\d{2}-\d{2}-\d{4}" />
                             </Form.Group>
+
                             <Form.Group>
                                 <Form.Label>Contact Number</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="contact_number"
-                                    value={voterData.contact_number || ''}
-                                    onChange={handleInputChange}
-                                />
+                                <Form.Control type="text" name="contact_number" value={voterData.contact_number || ''} onChange={handleInputChange} />
                             </Form.Group>
+
                             <Form.Group controlId="formColor">
                                 <Form.Label>Color</Form.Label>
-                                <Form.Select
-                                    name="color"
-                                    value={voterData.color || ''}
-                                    onChange={handleInputChange}
-                                >
+                                <Form.Select name="color" value={voterData.color || ''} onChange={handleInputChange}>
                                     <option value="">Select Color</option>
                                     <option value="RED">RED</option>
                                     <option value="YELLOW">YELLOW</option>
                                     <option value="BLUE">BLUE</option>
-
+                                    <option value="ORANGE">ORANGE</option>
                                 </Form.Select>
                             </Form.Group>
+
                             <Form.Group>
                                 <Form.Label>Referred By</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="referred_by"
-                                    value={voterData.referred_by || ''}
-                                    onChange={handleInputChange}
-                                />
+                                <Form.Control type="text" name="referred_by" value={voterData.referred_by || ''} onChange={handleInputChange} />
                             </Form.Group>
+
                             <Form.Group>
                                 <Form.Label>Remarks</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="remarks"
-                                    value={voterData.remarks || ''}
-                                    onChange={handleInputChange}
-                                />
+                                <Form.Control type="text" name="remarks" value={voterData.remarks || ''} onChange={handleInputChange} />
                             </Form.Group>
                         </Form>
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button variant="secondary" onClick={() => setShowModal(false)}>
-                            Close
-                        </Button>
+                        <Button variant="secondary" onClick={() => setShowModal(false)}>Close</Button>
                         <Button variant="primary" onClick={handleSaveChanges} disabled={saving}>
                             {saving ? 'Saving...' : 'Save Changes'}
                         </Button>
                     </Modal.Footer>
                 </Modal>
+
 
                 {/* Modal for Adding Voter */}
                 <Modal show={showAddModal} onHide={() => setShowAddModal(false)}>

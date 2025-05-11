@@ -39,7 +39,7 @@ const UpdateProfile = ({ updateProfileDetails, user }) => {
                 username: profileData.username,
             };
 
-            const response = await fetch('http://192.168.110.235:4000/users/profile', {
+            const response = await fetch('http://192.168.100.74:4000/users/profile', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

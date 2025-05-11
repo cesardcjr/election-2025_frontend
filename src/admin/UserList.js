@@ -11,7 +11,7 @@ export default function UserList() {
     // Function to fetch user data from the API
     const fetchData = async () => {
         try {
-            const response = await fetch(`http://192.168.110.235:4000/users/all`, {
+            const response = await fetch(`http://192.168.100.74:4000/users/all`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`,
                 },

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import AdminMenu from '../components/AdminMenu';
-import { Container, Row, Col, Table, Button, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Table, Button } from 'react-bootstrap';
 import { TailSpin } from 'react-loader-spinner';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -17,7 +17,7 @@ export default function Dashboard() {
 
     const fetchAllVoters = () => {
         setLoading(true);
-        fetch('http://192.168.110.235:4000/voters/all')
+        fetch('http://192.168.100.74:4000/voters/all')
             .then((res) => {
                 if (!res.ok) {
                     throw new Error('Failed to fetch voters');
@@ -44,7 +44,8 @@ export default function Dashboard() {
             totalVoters: voters.filter(voter => voter.barangay === barangay).length,
             redVoters: voters.filter(voter => voter.barangay === barangay && voter.color === 'RED').length,
             blueVoters: voters.filter(voter => voter.barangay === barangay && voter.color === 'BLUE').length,
-            yellowVoters: voters.filter(voter => voter.barangay === barangay && voter.color === 'YELLOW').length
+            yellowVoters: voters.filter(voter => voter.barangay === barangay && voter.color === 'YELLOW').length,
+            orangeVoters: voters.filter(voter => voter.barangay === barangay && voter.color === 'ORANGE').length
         };
     });
 
@@ -52,6 +53,7 @@ export default function Dashboard() {
     const redVoters = voters.filter(voter => voter.color === 'RED').length;
     const blueVoters = voters.filter(voter => voter.color === 'BLUE').length;
     const yellowVoters = voters.filter(voter => voter.color === 'YELLOW').length;
+    const orangeVoters = voters.filter(voter => voter.color === 'ORANGE').length;
 
 
     const generatePDF = () => {
@@ -108,16 +110,18 @@ export default function Dashboard() {
                                                 <th>Total <span style={{ color: "red", fontWeight: "bold" }}>RED</span> Voters</th>
                                                 <th>Total <span style={{ color: "blue", fontWeight: "bold" }}>BLUE</span> Voters</th>
                                                 <th>Total <span style={{ color: "yellow", fontWeight: "bold" }}>YELLOW</span> Voters</th>
+                                                <th>Total <span style={{ color: "orange", fontWeight: "bold" }}>ORANGE</span> Voters</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {barangayColors.map(({ barangay, totalVoters, redVoters, blueVoters, yellowVoters }) => (
+                                            {barangayColors.map(({ barangay, totalVoters, redVoters, blueVoters, yellowVoters, orangeVoters }) => (
                                                 <tr key={barangay}>
                                                     <td>{barangay}</td>
                                                     <td>{totalVoters}</td>
                                                     <td>{redVoters}</td>
                                                     <td>{blueVoters}</td>
                                                     <td>{yellowVoters}</td>
+                                                    <td>{orangeVoters}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -151,6 +155,10 @@ export default function Dashboard() {
                                                 <tr>
                                                     <td>Yellow Voters</td>
                                                     <td>{yellowVoters}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Orange Voters</td>
+                                                    <td>{orangeVoters}</td>
                                                 </tr>
                                             </tbody>
                                         </Table>

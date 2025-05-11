@@ -16,7 +16,7 @@ export default function HomePage() {
     }, []);
 
     const fetchAllVoters = () => {
-        fetch(`http://192.168.110.235:4000/voters/all`)
+        fetch(`http://192.168.100.74:4000/voters/all`)
             .then((res) => res.json())
             .then((data) => {
                 setVoters(data);
@@ -59,7 +59,7 @@ export default function HomePage() {
         e.preventDefault();
 
         // Search voters by fullname
-        fetch(`http://192.168.110.235:4000/voters/search`, {
+        fetch(`http://192.168.100.74:4000/voters/search`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

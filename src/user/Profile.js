@@ -16,7 +16,7 @@ export default function Profile() {
 
     useEffect(() => {
 
-        fetch(`http://192.168.110.235:4000/users/details`, {
+        fetch(`http://192.168.100.74:4000/users/details`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
             }
